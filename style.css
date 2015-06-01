@@ -1,0 +1,62 @@
+#ScoreDiv {
+    text-align: center;
+}
+
+#Main table {
+    margin: auto;
+}
+
+#Main table td {
+    height: 100px;
+    width: 100px;
+    margin: 10px;
+    border-radius: 15px;
+    border: 1px solid black;
+    text-align: center;
+    font-size: xx-large;
+    color: black;
+}
+
+.tile2 {
+    background-color: #f7ffcc;
+}
+
+.tile4 {
+    background-color: #f7ff00;
+}
+
+.tile8 {
+    background-color: bisque;
+}
+
+.tile16 {
+    background-color: burlywood;
+}
+
+.tile32 {
+    background-color: chocolate;
+}
+
+.tile64 {
+    background-color: crimson;
+}
+
+.tile128 {
+    background-color: blue;
+}
+
+.tile256 {
+    background-color: darkgreen;
+}
+
+.tile512 {
+    background-color: gold;
+}
+
+.tile1024 {
+    background-color: deeppink;
+}
+
+.tile2048 {
+    background-color: purple;
+}
