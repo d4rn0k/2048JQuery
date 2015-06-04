@@ -29,6 +29,12 @@ function initializeMap() {
 
 function bindKeys() {
     $(document).keydown(function(event) {
+
+        //TODO przenieść do switcha powinno być wywoływane tylko  dla strzałek left right up down, teraz jest dla wszystkich klawiszy
+        if (!canMove(tilesArray)) {
+            window.alert("Przegrałeś! Wynik:" + currentScore);
+        }
+
         switch (event.which) {
             case 37: // left
                 moveLeft(tilesArray);
@@ -46,14 +52,13 @@ function bindKeys() {
                 return; // exit this handler for other keys
         }
         event.preventDefault(); // prevent the default action (scroll / move caret)
+
         try {
             generateTiles(tilesArray, 1);
         }
         catch (exception) {
-            if (exception === NoAvailableSpaceException) {
-                window.alert("Przegrałeś, wynik: " + currentScore);
-            }
         }
+
         renderMap(tilesArray);
     });
 }
@@ -117,15 +122,37 @@ function setColumnFromTilesArray(tilesArray, column, columnIndex) {
     }
 }
 
-function checkIfCanMove(tilesArray) {
-    for (var i = 0; i < mapHeight; i++) {
-        for (var j = 0; j < mapWidth - 1; j++) {
-
+function canMove(tilesArray) {
+    // Left && Right
+    for (var rowIndex = 0; rowIndex < mapHeight; rowIndex++) {
+        if (checkIfCanRowMove(tilesArray[rowIndex])) {
+            return true;
         }
     }
+
+    //Up && Down
+
+    for (var columnIndex = 0; columnIndex < mapWidth; columnIndex++) {
+        if (checkIfCanRowMove(getColumnFromTilesArray(tilesArray, columnIndex))) {
+            return true;
+        }
+    }
+    return false;
 }
 
-function moveUp(inputArray) {
+function checkIfCanRowMove(row) {
+    var canMove = false;
+
+    for (var i = 0; i < row.length - 1; i++) {
+        if (row[i] === "" || row[i + 1] === "" || row[i] === row[i + 1]) {
+            return true;
+        }
+    }
+
+    return canMove;
+}
+
+function moveUp(tilesArray) {
 
 //    for (var indexCol = 0; indexCol < mapWidth; indexCol++) {
 //        var n = mapWidth;
@@ -148,7 +175,7 @@ function moveUp(inputArray) {
 //    }
 
     for (var columnIndex = 0; columnIndex < mapHeight; columnIndex++) {
-        var sortedColumn = sortColumn(getColumnFromTilesArray(tilesArray, columnIndex));
+        var sortedColumn = cleanAndCalculateRow(getColumnFromTilesArray(tilesArray, columnIndex));
         setColumnFromTilesArray(tilesArray, sortedColumn, columnIndex);
         //
     }
@@ -156,24 +183,24 @@ function moveUp(inputArray) {
 
 function moveDown(tilesArray) {
     for (var columnIndex = 0; columnIndex < mapHeight; columnIndex++) {
-        var sortedColumn = sortColumnReverse(getColumnFromTilesArray(tilesArray, columnIndex));
+        var sortedColumn = cleanAndCalculateRowReverse(getColumnFromTilesArray(tilesArray, columnIndex));
         setColumnFromTilesArray(tilesArray, sortedColumn, columnIndex);
     }
 }
 
 function moveLeft(tilesArray) {
     for (var indexRow = 0; indexRow < mapHeight; indexRow++) {
-        tilesArray[indexRow] = sortColumn(tilesArray[indexRow]);
+        tilesArray[indexRow] = cleanAndCalculateRow(tilesArray[indexRow]);
     }
 }
 
 function moveRight(tilesArray) {
     for (var indexRow = 0; indexRow < mapHeight; indexRow++) {
-        tilesArray[indexRow] = sortColumnReverse(tilesArray[indexRow]);
+        tilesArray[indexRow] = cleanAndCalculateRowReverse(tilesArray[indexRow]);
     }
 }
 
-function sortColumn(inputColumn) {
+function cleanAndCalculateRow(inputColumn) {
     var n = inputColumn.length;
     var sortedLastIndex = 0;
     var changesCount = 0;
@@ -198,7 +225,7 @@ function sortColumn(inputColumn) {
     return inputColumn;
 }
 
-function sortColumnReverse(inputColumn) {
+function cleanAndCalculateRowReverse(inputColumn) {
     var n = inputColumn.length;
     var sortedLastIndex = n - 1;
     var changesCount = 0;
@@ -223,13 +250,13 @@ function sortColumnReverse(inputColumn) {
     return inputColumn;
 }
 
-function displayArray(inputArray) {
-    for (var i = 0; i < 4; i++) {
-        var row = i;
-        for (var j = 0; j < 4; j++) {
-            row += "[" + (inputArray[i][j] !== "" ? inputArray[i][j] : " "  ) + "]";
-        }
-        console.log(row);
-    }
-    console.log("\n");
-}
+//function displayArray(inputArray) {
+//    for (var i = 0; i < 4; i++) {
+//        var row = i;
+//        for (var j = 0; j < 4; j++) {
+//            row += "[" + (inputArray[i][j] !== "" ? inputArray[i][j] : " "  ) + "]";
+//        }
+//        console.log(row);
+//    }
+//    console.log("\n");
+//}
