@@ -1,96 +1,211 @@
 "use strict";
 
+//TODO Przekształcić na MVC
+//TODO Dodać restart Button
+//TODO Dodać funkcjonalność top Score (korzystający z localstorage)
+//TODO Dodać dobre kolory dla kafelków
+//TODO Dodać responsywność
+//TODO Dodać możliwość zmiany rozmiaru kafelków
+//TODO Dodać możliwość contentEditable dla komórki (HACK)
+
+var DIRECTIONS = Object.freeze({
+    LEFT: 37,
+    UP: 38,
+    RIGHT: 39,
+    DOWN: 40
+});
 var NoAvailableSpaceException = "Brak miejsca na mapie!";
-var mapWidth = 4;
-var mapHeight = 4;
-var tilesArray = [mapHeight[mapWidth]];
+
 var currentScore = 0;
+var tiles;
 
-initializeMap();
-bindKeys();
-
-Array.prototype.swap = function(x, y) {
-    var b = this[x];
-    this[x] = this[y];
-    this[y] = b;
-    return this;
-};
-
-function initializeMap() {
-    for (var i = 0; i < mapHeight; i++) {
-        tilesArray[i] = [];
-        for (var j = 0; j < mapWidth; j++) {
-            tilesArray[i][j] = "";
-        }
-    }
-    generateTiles(tilesArray, 3);
-    renderMap(tilesArray);
+/**
+ * Classes
+ */
+function Tile(value) {
+    this.value = value;
 }
 
-function bindKeys() {
+function ColumnOrRow(length) {
+    this.values = new Array(length);
+    this.changed = true;
+    this.canMove = false;
+}
+
+function TilesArray(height, width) {
+    this.columns = [];
+    this.rows = [];
+    this.makeColumnsAndRows = function() {
+        for (var i = 0; i < width; i++) {
+            this.columns[i] = new ColumnOrRow(height);
+        }
+        for (var j = 0; j < height; j++) {
+            this.rows[j] = new ColumnOrRow(width);
+        }
+
+    };
+    this.init = function() {
+        this.columns = [];
+        this.rows = [];
+        this.makeColumnsAndRows();
+        for (var rowIndex = 0; rowIndex < height; rowIndex++) {
+            for (var columnIndex = 0; columnIndex < width; columnIndex++) {
+                var tile = new Tile("");
+                this.columns[columnIndex].values[rowIndex] = tile;
+                this.rows[rowIndex].values[columnIndex] = tile;
+            }
+        }
+    };
+    this.currentMapHeight = height;
+    this.currentMapWidth = width;
+}
+
+initializeMap();
+
+function generateHtmlTable(height, width) {
+    var jQTable = $("#GameTable");
+
+    jQTable.empty();
+    for (var i = 0; i < height; i++) {
+        var row = $("<tr></tr>").appendTo(jQTable);
+        for (var j = 0; j < width; j++) {
+            $(row).append("<td></td>");
+        }
+    }
+}
+
+function generateMap(newHeight, newWidth) {
+    generateHtmlTable(newHeight, newWidth);
+
+    tiles = new TilesArray(newHeight, newWidth);
+    tiles.init();
+
+    generateTiles(tiles.columns, 3);
+    renderMap(tiles.rows);
+
+    return tiles;
+}
+
+function initializeMap() {
+    var tiles;
+    tiles = generateMap(3, 7);
+
+//    tiles.columns[0].values[0].value = 1;
+//    tiles.columns[0].values[1].value = 2;
+//    tiles.columns[0].values[2].value = 3;
+//    tiles.columns[0].values[3].value = 4;
+//
+//    tiles.columns[1].values[0].value = 5;
+//    tiles.columns[1].values[1].value = 6;
+//    tiles.columns[1].values[2].value = 7;
+//    tiles.columns[1].values[3].value = 8;
+//
+//    tiles.columns[2].values[0].value = 9;
+//    tiles.columns[2].values[1].value = 10;
+//    tiles.columns[2].values[2].value = 11;
+//    tiles.columns[2].values[3].value = 12;
+//
+//    tiles.columns[3].values[0].value = 13;
+//    tiles.columns[3].values[1].value = 14;
+//    tiles.columns[3].values[2].value = 16;
+//    tiles.columns[3].values[3].value = 16;
+
+    bindKeys(tiles);
+}
+
+function bindKeys(tiles) {
+
+    $("#RowsSettings").find("select").change(function() {
+        tiles.currentMapHeight = this.value;
+        console.log("new Height: " + tiles.currentMapHeight);
+        tiles = generateMap(tiles.currentMapHeight, tiles.currentMapWidth);
+    });
+
+    $("#ColumnsSettings").find("select").change(function() {
+        tiles.currentMapWidth = this.value;
+        console.log("new Width: " + tiles.currentMapWidth);
+
+        tiles = generateMap(tiles.currentMapHeight, tiles.currentMapWidth);
+    });
+
     $(document).keydown(function(event) {
+        moveAndGenerate(event);
+    });
+}
+
+function moveAndGenerate(event) {
         switch (event.which) {
-            case 37: // left
-                moveLeft(tilesArray);
+            case DIRECTIONS.LEFT:
+                makeMoveAndCheck(moveLeft, tiles);
                 break;
-            case 38: // up
-                moveUp(tilesArray);
+            case DIRECTIONS.UP:
+                makeMoveAndCheck(moveUp, tiles);
                 break;
-            case 39: // right
-                moveRight(tilesArray);
+            case DIRECTIONS.RIGHT:
+                makeMoveAndCheck(moveRight, tiles);
                 break;
-            case 40: // down
-                moveDown(tilesArray);
+            case DIRECTIONS.DOWN:
+                makeMoveAndCheck(moveDown, tiles);
                 break;
             default:
                 return; // exit this handler for other keys
         }
         event.preventDefault(); // prevent the default action (scroll / move caret)
+
         try {
-            generateTiles(tilesArray, 1);
+            generateTiles(tiles.columns, 1);
         }
         catch (exception) {
-            if (exception === NoAvailableSpaceException) {
-                window.alert("Przegrałeś, wynik: " + currentScore);
-            }
         }
-        renderMap(tilesArray);
-    });
+
+    renderMap(tiles.rows);
 }
 
-function renderMap(tilesArray) {
+function makeMoveAndCheck(moveFunction, tiles) {
+    if (!canMove(tiles)) {
+        window.alert("Przegrałeś! Wynik:" + currentScore);
+    }
+
+    moveFunction(tiles);
+}
+
+function renderMap(rows) {
     var jQTiles = $("table td");
-    for (var i = 0; i < mapHeight; i++) {
-        for (var j = 0; j < mapWidth; j++) {
-            var tileValue = tilesArray[i][j];
-            $(jQTiles[i * mapHeight + j]).html(tileValue).attr('class', 'tile' + tileValue);
+
+    for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+        var currentRow = rows[rowIndex];
+
+        for (var columnIndex = 0; columnIndex < currentRow.values.length; columnIndex++) {
+            var tileValue = currentRow.values[columnIndex].value;
+            $(jQTiles[rowIndex * rows[0].values.length + columnIndex]).html(tileValue).attr('class', 'tile' + tileValue);
         }
     }
     $("#Score").html(currentScore);
 }
 
-function generateTiles(tilesArray, tilesToGenerateCount) {
-    console.log("Wygenerowałem kafelki");
-
-    var availablePositions = getAvailablePositions(tilesArray);
+function generateTiles(columns, tilesToGenerateCount) {
+    var availablePositions = getAvailablePositions(columns);
     if (availablePositions === -1) {
         throw NoAvailableSpaceException;
     }
 
     for (var i = 0; i < tilesToGenerateCount; i++) {
         var tilePositions = getRandomObjectFromArray(availablePositions);
-        var indexI = tilePositions.i;
-        var indexJ = tilePositions.j;
-        tilesArray[indexI][indexJ] = (Math.floor((Math.random() * 2))) ? 2 : 4; // Losuje 2 albo 4
+        var rowIndex = tilePositions.rowIndex;
+        var columnIndex = tilePositions.columnIndex;
+        columns[columnIndex].values[rowIndex].value = (Math.floor((Math.random() * 2))) ? 2 : 2; // Losuje 2 albo 4
     }
 }
 
-function getAvailablePositions(tilesArray) {
+function getAvailablePositions(columns) {
     var availablePositions = [];
-    for (var i = 0; i < mapHeight; i++) {
-        for (var j = 0; j < mapWidth; j++) {
-            if (tilesArray[i][j] === "") {
-                availablePositions.push({i: i, j: j});
+    for (var i = 0; i < columns.length; i++) {
+
+        var currentColumn = columns[i];
+        for (var j = 0; j < currentColumn.values.length; j++) {
+
+            if (currentColumn.values[j].value === "") {
+                availablePositions.push({rowIndex: j, columnIndex: i});
             }
         }
     }
@@ -103,94 +218,87 @@ function getRandomObjectFromArray(inputArray) {
     return inputArray[Math.floor(Math.random() * maxIndex) + minIndex];
 }
 
-function getColumnFromTilesArray(tilesArray, columnIndex) {
-    var outputArray = [];
-    for (var i = 0; i < mapHeight; i++) {
-        outputArray.push(tilesArray[i][columnIndex]);
-    }
-    return outputArray;
-}
-
-function setColumnFromTilesArray(tilesArray, column, columnIndex) {
-    for (var i = 0; i < mapHeight; i++) {
-        tilesArray[i][columnIndex] = column[i];
-    }
-}
-
-function checkIfCanMove(tilesArray) {
-    for (var i = 0; i < mapHeight; i++) {
-        for (var j = 0; j < mapWidth - 1; j++) {
-
+function canMove(tilesArray) {
+    // Left && Right
+    for (var rowIndex = 0; rowIndex < tilesArray.currentMapHeight; rowIndex++) {
+        if (checkIfCanRowMove(tilesArray.rows[rowIndex].values)) {
+            return true;
         }
     }
+
+    //Up && Down
+    for (var columnIndex = 0; columnIndex < tilesArray.currentMapWidth; columnIndex++) {
+        if (checkIfCanRowMove((tilesArray.columns[columnIndex].values))) {
+            return true;
+        }
+    }
+    return false;
 }
 
-function moveUp(inputArray) {
+function checkIfCanRowMove(row) {
+    var canMove = false;
 
-//    for (var indexCol = 0; indexCol < mapWidth; indexCol++) {
-//        var n = mapWidth;
-//        var indexJoinLock = 0;
-//        do {
-//            var indexRow;
-//            for (indexRow = indexJoinLock; indexRow < mapHeight - 1; indexRow++) {
-//                if (inputArray[indexRow][indexCol] === "") {
-//                    inputArray[indexRow][indexCol] = inputArray[indexRow + 1][indexCol];
-//                    inputArray[indexRow + 1][indexCol] = "";
-//                }
-//                else if ((inputArray[indexRow][indexCol] === inputArray[indexRow + 1][indexCol])) {
-//                    indexJoinLock = indexRow + 1;
-//                    inputArray[indexRow][indexCol] = inputArray[indexRow + 1][indexCol] * 2;
-//                    inputArray[indexRow + 1][indexCol] = "";
-//                }
-//            }
-//            n--;
-//        } while (n > 1);
-//    }
+    for (var i = 0; i < row.length - 1; i++) {
+        var currentCellValue = row[i].value;
+        var nextCellValue = row[i + 1].value;
+        if (currentCellValue === "" || nextCellValue === "" || currentCellValue === nextCellValue) {
+            return true;
+        }
+    }
 
-    for (var columnIndex = 0; columnIndex < mapHeight; columnIndex++) {
-        var sortedColumn = sortColumn(getColumnFromTilesArray(tilesArray, columnIndex));
-        setColumnFromTilesArray(tilesArray, sortedColumn, columnIndex);
-        //
+    return canMove;
+}
+
+function moveUp(input) {
+    var columns = input.columns;
+    for (var columnIndex = 0; columnIndex < columns.length; columnIndex++) {
+        columns[columnIndex] = doSingleMoveOnRow(columns[columnIndex]);
     }
 }
 
-function moveDown(tilesArray) {
-    for (var columnIndex = 0; columnIndex < mapHeight; columnIndex++) {
-        var sortedColumn = sortColumnReverse(getColumnFromTilesArray(tilesArray, columnIndex));
-        setColumnFromTilesArray(tilesArray, sortedColumn, columnIndex);
+function moveDown(input) {
+    var columns = input.columns;
+    for (var columnIndex = 0; columnIndex < columns.length; columnIndex++) {
+        columns[columnIndex] = doSingleMoveOnRowReverse(columns[columnIndex]);
     }
 }
 
-function moveLeft(tilesArray) {
-    for (var indexRow = 0; indexRow < mapHeight; indexRow++) {
-        tilesArray[indexRow] = sortColumn(tilesArray[indexRow]);
+function moveLeft(input) {
+    var rows = input.rows;
+    for (var indexRow = 0; indexRow < rows.length; indexRow++) {
+        rows[indexRow] = doSingleMoveOnRow(rows[indexRow]);
     }
 }
 
-function moveRight(tilesArray) {
-    for (var indexRow = 0; indexRow < mapHeight; indexRow++) {
-        tilesArray[indexRow] = sortColumnReverse(tilesArray[indexRow]);
+function moveRight(input) {
+    var rows = input.rows;
+    for (var indexRow = 0; indexRow < rows.length; indexRow++) {
+        rows[indexRow] = doSingleMoveOnRowReverse(rows[indexRow]);
     }
 }
 
-function sortColumn(inputColumn) {
-    var n = inputColumn.length;
+function doSingleMoveOnRow(inputColumn) {
+    var n = inputColumn.values.length;
     var sortedLastIndex = 0;
-    var changesCount = 0;
     do {
         var indexRow;
-        for (indexRow = sortedLastIndex; indexRow < inputColumn.length - 1; indexRow++) {
-            if (inputColumn[indexRow] === "") {
-                inputColumn.swap(indexRow, indexRow + 1);
-            } else if ((inputColumn[indexRow] === inputColumn[indexRow + 1])) {
+        for (indexRow = sortedLastIndex; indexRow < inputColumn.values.length - 1; indexRow++) {
+            var currentElement = inputColumn.values[indexRow];
+            var nextElement = inputColumn.values[indexRow + 1];
+            inputColumn.changed = true;
+            if (currentElement.value === "") {
+                currentElement.value = nextElement.value;
+                nextElement.value = "";
+
+            } else if ((currentElement.value === nextElement.value)) {
                 sortedLastIndex = indexRow + 1;
 
-                inputColumn[indexRow] = inputColumn[indexRow + 1] * 2;
-                inputColumn[indexRow + 1] = "";
+                currentElement.value = nextElement.value * 2;
+                nextElement.value = "";
 
-                currentScore += inputColumn[indexRow];
+                currentScore += currentElement.value;
             } else {
-                changesCount++;
+                inputColumn.changed = false;
             }
         }
         n--;
@@ -198,38 +306,29 @@ function sortColumn(inputColumn) {
     return inputColumn;
 }
 
-function sortColumnReverse(inputColumn) {
-    var n = inputColumn.length;
+function doSingleMoveOnRowReverse(inputColumn) {
+    var n = inputColumn.values.length;
     var sortedLastIndex = n - 1;
-    var changesCount = 0;
     do {
         var indexRow;
         for (indexRow = sortedLastIndex; indexRow > 0; indexRow--) {
-            if (inputColumn[indexRow] === "") {
-                inputColumn[indexRow] = inputColumn[indexRow - 1];
-                inputColumn[indexRow - 1] = "";
+            var currentElement = inputColumn.values[indexRow];
+            var prevElement = inputColumn.values[indexRow - 1];
+
+            if (currentElement.value === "") {
+                currentElement.value = prevElement.value;
+                prevElement.value = "";
             }
-            else if ((inputColumn[indexRow] === inputColumn[indexRow - 1])) {
+            else if ((currentElement.value === prevElement.value)) {
                 sortedLastIndex = indexRow - 1;
-                inputColumn[indexRow] = inputColumn[indexRow - 1] * 2;
-                inputColumn[indexRow - 1] = "";
-                currentScore += inputColumn[indexRow];
+                currentElement.value = prevElement.value * 2;
+                prevElement.value = "";
+                currentScore += currentElement.value;
             } else {
-                changesCount++;
+                inputColumn.changed = false;
             }
         }
         n--;
     } while (n > 1);
     return inputColumn;
-}
-
-function displayArray(inputArray) {
-    for (var i = 0; i < 4; i++) {
-        var row = i;
-        for (var j = 0; j < 4; j++) {
-            row += "[" + (inputArray[i][j] !== "" ? inputArray[i][j] : " "  ) + "]";
-        }
-        console.log(row);
-    }
-    console.log("\n");
 }
