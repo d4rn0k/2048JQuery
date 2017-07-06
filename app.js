@@ -14,6 +14,13 @@ var DIRECTIONS = Object.freeze({
     RIGHT: 39,
     DOWN: 40
 });
+
+var GAME_STATES = Object.freeze({
+    GAME_OVER: 0,
+    MOVE_OTHER_DIRECTION: 1,
+    CAN_MOVE: 2
+});
+
 var NoAvailableSpaceException = "Brak miejsca na mapie!";
 
 var currentScore = 0;
@@ -28,14 +35,12 @@ function Tile(value) {
 
 function ColumnOrRow(length) {
     this.values = new Array(length);
-    this.changed = true;
-    this.canMove = false;
 }
 
 function TilesArray(height, width) {
     this.columns = [];
     this.rows = [];
-    this.makeColumnsAndRows = function() {
+    this.makeColumnsAndRows = function () {
         for (var i = 0; i < width; i++) {
             this.columns[i] = new ColumnOrRow(height);
         }
@@ -44,7 +49,7 @@ function TilesArray(height, width) {
         }
 
     };
-    this.init = function() {
+    this.init = function () {
         this.columns = [];
         this.rows = [];
         this.makeColumnsAndRows();
@@ -89,84 +94,28 @@ function generateMap(newHeight, newWidth) {
 function initializeMap() {
     var tiles;
     tiles = generateMap(3, 7);
-
-//    tiles.columns[0].values[0].value = 1;
-//    tiles.columns[0].values[1].value = 2;
-//    tiles.columns[0].values[2].value = 3;
-//    tiles.columns[0].values[3].value = 4;
-//
-//    tiles.columns[1].values[0].value = 5;
-//    tiles.columns[1].values[1].value = 6;
-//    tiles.columns[1].values[2].value = 7;
-//    tiles.columns[1].values[3].value = 8;
-//
-//    tiles.columns[2].values[0].value = 9;
-//    tiles.columns[2].values[1].value = 10;
-//    tiles.columns[2].values[2].value = 11;
-//    tiles.columns[2].values[3].value = 12;
-//
-//    tiles.columns[3].values[0].value = 13;
-//    tiles.columns[3].values[1].value = 14;
-//    tiles.columns[3].values[2].value = 16;
-//    tiles.columns[3].values[3].value = 16;
-
     bindKeys(tiles);
 }
 
 function bindKeys(tiles) {
 
-    $("#RowsSettings").find("select").change(function() {
+    $("#RowsSettings").find("select").change(function () {
         tiles.currentMapHeight = this.value;
         console.log("new Height: " + tiles.currentMapHeight);
+        currentScore = 0;
         tiles = generateMap(tiles.currentMapHeight, tiles.currentMapWidth);
     });
 
-    $("#ColumnsSettings").find("select").change(function() {
+    $("#ColumnsSettings").find("select").change(function () {
         tiles.currentMapWidth = this.value;
         console.log("new Width: " + tiles.currentMapWidth);
-
+        currentScore = 0;
         tiles = generateMap(tiles.currentMapHeight, tiles.currentMapWidth);
     });
 
-    $(document).keydown(function(event) {
+    $(document).keydown(function (event) {
         moveAndGenerate(event);
     });
-}
-
-function moveAndGenerate(event) {
-        switch (event.which) {
-            case DIRECTIONS.LEFT:
-                makeMoveAndCheck(moveLeft, tiles);
-                break;
-            case DIRECTIONS.UP:
-                makeMoveAndCheck(moveUp, tiles);
-                break;
-            case DIRECTIONS.RIGHT:
-                makeMoveAndCheck(moveRight, tiles);
-                break;
-            case DIRECTIONS.DOWN:
-                makeMoveAndCheck(moveDown, tiles);
-                break;
-            default:
-                return; // exit this handler for other keys
-        }
-        event.preventDefault(); // prevent the default action (scroll / move caret)
-
-        try {
-            generateTiles(tiles.columns, 1);
-        }
-        catch (exception) {
-        }
-
-    renderMap(tiles.rows);
-}
-
-function makeMoveAndCheck(moveFunction, tiles) {
-    if (!canMove(tiles)) {
-        window.alert("Przegrałeś! Wynik:" + currentScore);
-    }
-
-    moveFunction(tiles);
 }
 
 function renderMap(rows) {
@@ -218,23 +167,96 @@ function getRandomObjectFromArray(inputArray) {
     return inputArray[Math.floor(Math.random() * maxIndex) + minIndex];
 }
 
-function canMove(tilesArray) {
-    // Left && Right
-    for (var rowIndex = 0; rowIndex < tilesArray.currentMapHeight; rowIndex++) {
-        if (checkIfCanRowMove(tilesArray.rows[rowIndex].values)) {
-            return true;
-        }
+
+function moveAndGenerate(event) {
+
+    if (makeMoveAndCheck(event.which, tiles) === undefined) {
+        return;
+    }
+    event.preventDefault(); // prevent the default action (scroll / move caret)
+
+    try {
+        generateTiles(tiles.columns, 1);
+    }
+    catch (exception) {
     }
 
-    //Up && Down
-    for (var columnIndex = 0; columnIndex < tilesArray.currentMapWidth; columnIndex++) {
-        if (checkIfCanRowMove((tilesArray.columns[columnIndex].values))) {
-            return true;
-        }
-    }
-    return false;
+    renderMap(tiles.rows);
 }
 
+function makeMoveAndCheck(direction, tiles) {
+
+    var directionFunction;
+
+    switch (direction) {
+        case DIRECTIONS.LEFT:
+            directionFunction = moveLeft;
+            break;
+        case DIRECTIONS.UP:
+            directionFunction = moveUp;
+            break;
+        case DIRECTIONS.RIGHT:
+            directionFunction = moveRight;
+            break;
+        case DIRECTIONS.DOWN:
+            directionFunction = moveDown;
+            break;
+        default:
+            return; // exit this handler for other keys
+    }
+
+
+    switch (canMove(direction, tiles)) {
+        case GAME_STATES.CAN_MOVE:
+            directionFunction(tiles);
+            break;
+        case GAME_STATES.MOVE_OTHER_DIRECTION:
+            console.log("RUSZ SIĘ W INNYM KIERUNKU!");
+            return;
+        case GAME_STATES.GAME_OVER:
+            window.alert("Przegrałeś! Wynik:" + currentScore);
+    }
+
+    return "Ok";
+}
+
+function canMove(direction, tilesArray) {
+    var stateLeftRight;
+    var stateUpDown;
+
+
+    for (var rowIndex = 0; rowIndex < tilesArray.currentMapHeight; rowIndex++) {
+        if (checkIfCanRowMove(tilesArray.rows[rowIndex].values)) {
+            stateLeftRight = GAME_STATES.CAN_MOVE;
+            break;
+        } else {
+            stateLeftRight = GAME_STATES.MOVE_OTHER_DIRECTION;
+        }
+    }
+
+    for (var columnIndex = 0; columnIndex < tilesArray.currentMapWidth; columnIndex++) {
+        if (checkIfCanRowMove((tilesArray.columns[columnIndex].values))) {
+            stateUpDown = GAME_STATES.CAN_MOVE;
+            break;
+        } else {
+            stateUpDown = GAME_STATES.MOVE_OTHER_DIRECTION;
+        }
+    }
+
+    if (stateLeftRight === GAME_STATES.MOVE_OTHER_DIRECTION && stateUpDown === GAME_STATES.MOVE_OTHER_DIRECTION) {
+        return GAME_STATES.GAME_OVER;
+    } else if ((direction === DIRECTIONS.LEFT || direction === DIRECTIONS.RIGHT) && stateLeftRight === GAME_STATES.CAN_MOVE) {
+        return GAME_STATES.CAN_MOVE;
+    } else if ((direction === DIRECTIONS.UP || direction === DIRECTIONS.DOWN) && stateUpDown === GAME_STATES.CAN_MOVE) {
+        return GAME_STATES.CAN_MOVE;
+    }
+    else {
+        return GAME_STATES.MOVE_OTHER_DIRECTION;
+    }
+}
+
+
+//Błąd rozdzielić na dwie funkcję oddzielnie sprawdzające prawo i lewo, górę i dół
 function checkIfCanRowMove(row) {
     var canMove = false;
 
