@@ -10,59 +10,19 @@
 
 <body>
 
-<div id="Main">
+<div id="MainContainer">
     <div id="ScoreDiv">
-        <h1>Score: <b id="Score">0</b></h1>
+        <h1>Score: <b class="currentScore">0</b></h1>
     </div>
 
-    <table id="GameTable">
-        <!--<tr>-->
-        <!--<td></td>-->
-        <!--<td></td>-->
-        <!--<td></td>-->
-        <!--<td></td>-->
-        <!--<td></td>-->
-        <!--</tr>-->
-        <!--<tr>-->
-        <!--<td></td>-->
-        <!--<td></td>-->
-        <!--<td></td>-->
-        <!--<td></td>-->
-        <!--<td></td>-->
-        <!--</tr>-->
-        <!--<tr>-->
-        <!--<td></td>-->
-        <!--<td></td>-->
-        <!--<td></td>-->
-        <!--<td></td>-->
-        <!--<td></td>-->
-        <!--</tr>-->
-        <!--<tr>-->
-        <!--<td></td>-->
-        <!--<td></td>-->
-        <!--<td></td>-->
-        <!--<td></td>-->
-        <!--<td></td>-->
-        <!--</tr>-->
-        <!--<tr>-->
-        <!--<td></td>-->
-        <!--<td></td>-->
-        <!--<td></td>-->
-        <!--<td></td>-->
-        <!--<td></td>-->
-        <!--</tr>-->
-
-    </table>
-
-    <div style="position: absolute; top: 20%; left: 5%">
-
+    <div id="Settings">
         <label id="RowsSettings" title="rows"><b>Rows:</b>
             <select>
                 <option value="1">1</option>
-                <option selected="selected" value="2">2</option>
+                <option value="2">2</option>
                 <option value="3">3</option>
                 <option value="4">4</option>
-                <option value="5">5</option>
+                <option selected="selected" value="5">5</option>
                 <option value="6">6</option>
                 <option value="7">7</option>
             </select>
@@ -73,18 +33,53 @@
                 <option value="1">1</option>
                 <option value="2">2</option>
                 <option value="3">3</option>
-                <option selected="selected" value="4">4</option>
-                <option value="5">5</option>
+                <option value="4">4</option>
+                <option selected="selected" value="5">5</option>
                 <option value="6">6</option>
                 <option value="7">7</option>
             </select>
         </label>
+        <div style="margin: 0 auto; width: 170px">
+            <button class="button" onclick="restartGame()">Restart</button>
+        </div>
+
+
+    </div>
+
+    <div id="GameTableContainer" class="border-box">
+        <table id="GameTable"></table>
+    </div>
+
+    <div id="TopScores" class="border-box">
+        <h1 class="heading">Top scores <span id="ScoreTypeHeader"></span>:</h1>
+        <div id="TopScoresContainer">
+
+        </div>
+    </div>
+
+    <div id="gameOverModal" class="modal">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h1>Game Over! Final score: <span class="currentScore"></span>!</h1>
+            </div>
+
+            <div class="modal-body">
+                <form id="saveScoreForm">
+                    <label for="nicknameInput">Nick: </label>
+                    <input id="nicknameInput" class="border-box" pattern="[A-Za-z._-]{1,15}"
+                           name="nicknameInput" type="text" placeholder="Anonymous" maxlength="15" required autocomplete="off">
+                    <button id="saveScoreButton" type="button" class="button border-box">Zapisz</button>
+
+                </form>
+            </div>
+
+        </div>
 
     </div>
 
 </div>
 
 </body>
-<script src="https://code.jquery.com/jquery-2.1.4.js"></script>
 <script src="app.js"></script>
 </html>

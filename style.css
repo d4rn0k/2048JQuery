@@ -1,20 +1,263 @@
+body {
+    font-family: "Agency FB", serif;
+    background-color: lightgrey;
+}
+
+#MainContainer {
+
+}
+
 #ScoreDiv {
     text-align: center;
 }
 
-#Main table {
-    margin: auto;
+.currentScore {
+    color: red;
 }
 
-#Main table td {
+#GameTable {
+    margin: 0 auto;
+    /*border: solid dimgray;*/
+    -webkit-box-shadow: 5px 10px 76px 1px rgba(0, 0, 0, 0.8);
+    -moz-box-shadow: 5px 10px 76px 1px rgba(0, 0, 0, 0.8);
+    box-shadow: 5px 10px 76px 1px rgba(0, 0, 0, 0.8);
+}
+
+#GameTableContainer {
+    width: 74%;
+    float: left;
+    display: block;
+}
+
+#MainContainer table td {
     height: 100px;
     width: 100px;
+    max-width: 100px;
+    max-height: 100px;
     margin: 10px;
-    border-radius: 15px;
-    border: 1px solid black;
-    text-align: center;
-    font-size: xx-large;
+    border-radius: 1px;
+
     color: black;
+    font-size: 3em;
+    text-align: center;
+}
+
+#Settings {
+    width: 12%;
+    float: left;
+}
+
+#Settings > label {
+    color: darkslategray;
+}
+
+#TopScores {
+    float: left;
+    width: 14%;
+    text-align: center;
+}
+
+#TopScores > h1 {
+    margin-top: 0;
+    margin-bottom: 10px;
+
+}
+
+#TopScores > .heading {
+    color: darkred;
+    font-size: 2em;
+
+    position: relative;
+}
+
+.border-box {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+/* The Modal (background) */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0, 0, 0); /* Fallback color */
+    background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+}
+
+/* Modal Content/Box */
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto; /* 15% from the top and centered */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 20%; /* Could be more or less, depending on screen size */
+    top: 25%;
+    -webkit-box-shadow: 5px 10px 76px 1px rgba(0, 0, 0, 0.8);
+    -moz-box-shadow: 5px 10px 76px 1px rgba(0, 0, 0, 0.8);
+    box-shadow: 5px 10px 76px 1px rgba(0, 0, 0, 0.8);
+}
+
+/* Modal Header */
+.modal-header {
+    padding: 2px 16px;
+    background-color: #5cb85c;
+    color: white;
+    text-align: center;
+}
+
+/* Modal Body */
+.modal-body {
+    padding: 2px 16px;
+}
+
+/* Modal Content */
+.modal-content {
+    position: relative;
+    background-color: #fefefe;
+    margin: auto;
+    padding: 0;
+    border: 1px solid #888;
+    width: 40%;
+    /*height: 25%;*/
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    -webkit-animation-name: animatetop;
+    -webkit-animation-duration: 0.4s;
+    animation-name: animatetop;
+    animation-duration: 0.4s
+}
+
+/* Add Animation */
+@-webkit-keyframes animatetop {
+    from {
+        top: -300px;
+        opacity: 0
+    }
+    to {
+        top: 0;
+        opacity: 1
+    }
+}
+
+@keyframes animatetop {
+    from {
+        top: -300px;
+        opacity: 0
+    }
+    to {
+        top: 0;
+        opacity: 1
+    }
+}
+
+.modal-body > form {
+    text-align: center;
+}
+
+.modal-body > form > label {
+    font-size: 2em;
+}
+
+.modal-body > form > input[type="text"] {
+    font-family: "Agency FB", serif;
+    font-size: 3em;
+    color: red;
+    background-color: inherit;
+    border: none;
+}
+
+#nicknameInput::-webkit-input-placeholder { /* WebKit, Blink, Edge */
+    color: #aaaaaa;
+    opacity: 0.4;
+}
+
+#nicknameInput:-moz-placeholder { /* Mozilla Firefox 4 to 18 */
+    color: #aaaaaa;
+    opacity: 0.4;
+}
+
+#nicknameInput::-moz-placeholder { /* Mozilla Firefox 19+ */
+    color: #aaaaaa;
+    opacity: 0.4;
+}
+
+#nicknameInput:-ms-input-placeholder { /* Internet Explorer 10-11 */
+    color: #aaaaaa;
+    opacity: 0.4;
+}
+
+#nicknameInput:-ms-input-placeholder { /* Microsoft Edge */
+    color: #aaaaaa;
+    opacity: 0.4;
+}
+
+.button {
+    background: #75cf3a;
+    background-image: -webkit-linear-gradient(top, #75cf3a, #26a809);
+    background-image: -moz-linear-gradient(top, #75cf3a, #26a809);
+    background-image: -ms-linear-gradient(top, #75cf3a, #26a809);
+    background-image: -o-linear-gradient(top, #75cf3a, #26a809);
+    background-image: linear-gradient(to bottom, #75cf3a, #26a809);
+    text-shadow: 3px 3px 12px #666666;
+    -webkit-box-shadow: 3px 3px 12px #666666;
+    -moz-box-shadow: 3px 3px 12px #666666;
+    box-shadow: 3px 3px 12px #666666;
+    font-size: 25px;
+    font-family: "Agency FB", serif;
+    color: #ffffff;
+    padding: 10px 20px 10px 20px;
+    text-decoration: none;
+}
+
+.button:hover {
+    background: #bd5d5d;
+    background-image: -webkit-linear-gradient(top, #bd5d5d, #7d0b0b);
+    background-image: -moz-linear-gradient(top, #bd5d5d, #7d0b0b);
+    background-image: -ms-linear-gradient(top, #bd5d5d, #7d0b0b);
+    background-image: -o-linear-gradient(top, #bd5d5d, #7d0b0b);
+    background-image: linear-gradient(to bottom, #bd5d5d, #7d0b0b);
+    text-decoration: none;
+}
+
+input, button, label {
+    vertical-align: middle;
+}
+
+.score-row {
+    font-size: 1em;
+    text-align: left;
+}
+
+.score-row > .score-row-id {
+    float: left;
+    width: 10%;
+    text-align: left;
+
+    color: green;
+}
+
+.score-row > .score-row-nickname {
+    float: left;
+    word-wrap: break-word;
+    width: 70%;
+
+    color: blue;
+}
+
+.score-row > .score-row-score {
+    float: left;
+    width: 14%;
+
+    color: black;
+}
+
+.tile {
+    background-color: honeydew;
 }
 
 .tile2 {
