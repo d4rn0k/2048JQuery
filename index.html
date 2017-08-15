@@ -2,7 +2,7 @@
 <html>
 <head lang="en">
     <meta charset="UTF-8">
-    <title></title>
+    <title>2048 Game</title>
     <link rel="stylesheet" href="style.css">
 </head>
 
@@ -12,46 +12,76 @@
 
 <div id="MainContainer">
     <div id="ScoreDiv">
-        <h1>Score: <b class="currentScore">0</b></h1>
+        Score: <b class="currentScore">0</b>
     </div>
 
-    <div id="Settings">
-        <label id="RowsSettings" title="rows"><b>Rows:</b>
-            <select>
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-                <option selected="selected" value="5">5</option>
-                <option value="6">6</option>
-                <option value="7">7</option>
-            </select>
-        </label>
+    <div id="LeftColumn">
 
-        <label id="ColumnsSettings" title="columns"><b>Columns:</b>
-            <select>
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-                <option selected="selected" value="5">5</option>
-                <option value="6">6</option>
-                <option value="7">7</option>
-            </select>
-        </label>
-        <div style="margin: 0 auto; width: 170px">
-            <button class="button" onclick="restartGame()">Restart</button>
+        <div class="box-with-shadow">
+
+            <div class="title">
+                How to play?
+            </div>
+
+            <div class="content">
+                <div class="description">
+                    Use arrow keys to move the tiles. Your quest is to make 2048 tile. Good luck!
+                </div>
+                <div class="keyboard-key-container">
+                    <label class="keyboard-key">&larr;</label>
+                    <label class="keyboard-key">&uarr;</label>
+                    <label class="keyboard-key">&darr;</label>
+                    <label class="keyboard-key">&rarr;</label>
+                </div>
+            </div>
+
         </div>
 
+        <div id="Settings" class="box-with-shadow">
+            <div class="settings-option">
+                Rows:
+            </div>
+            <label id="RowsSettings" class="settings-value" title="rows">
+                <select>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option selected="selected" value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                </select>
+            </label>
 
+            <div class="settings-option">
+                Columns:
+            </div>
+            <label id="ColumnsSettings" title="columns">
+                <select>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option selected="selected" value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                </select>
+            </label>
+            <div class="settings-button">
+                <button class="button" onclick="restartGame()">Restart</button>
+            </div>
+        </div>
     </div>
 
-    <div id="GameTableContainer" class="border-box">
+    <div id="GameTableContainer">
         <table id="GameTable"></table>
     </div>
 
-    <div id="TopScores" class="border-box">
-        <h1 class="heading">Top scores <span id="ScoreTypeHeader"></span>:</h1>
+    <div id="TopScores" class="box-with-shadow">
+        <div class="heading">
+            Top scores <span id="ScoreTypeHeader"></span>
+        </div>
+        <div id="no-scores">No scores!</div>
         <div id="TopScoresContainer">
 
         </div>
@@ -61,21 +91,24 @@
         <div class="modal-content">
 
             <div class="modal-header">
-                <h1>Game Over! Final score: <span class="currentScore"></span>!</h1>
+                <h1>Game Over! </h1>
+                <h1>Final score: <span class="currentScore"></span>!</h1>
             </div>
 
             <div class="modal-body">
                 <form id="saveScoreForm">
                     <label for="nicknameInput">Nick: </label>
-                    <input id="nicknameInput" class="border-box" pattern="[A-Za-z._-]{1,15}"
-                           name="nicknameInput" type="text" placeholder="Anonymous" maxlength="15" required autocomplete="off">
+                    <input id="nicknameInput"
+                           name="nicknameInput"
+                           type="text"
+                           placeholder="Anonymous"
+                           maxlength="15"
+                           required
+                           autocomplete="off">
                     <button id="saveScoreButton" type="button" class="button border-box">Zapisz</button>
-
                 </form>
             </div>
-
         </div>
-
     </div>
 
 </div>

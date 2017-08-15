@@ -1,9 +1,5 @@
 "use strict";
 
-//TODO Dodać dobre kolory dla kafelków
-//TODO Refactor: podział na komponenty
-//TODO TopScore oddzielnie dla każdego trybu gry
-
 Storage.prototype.setObj = function (key, obj) {
     return this.setItem(key, JSON.stringify(obj));
 };
@@ -25,44 +21,43 @@ var GAME_STATES = Object.freeze({
     GAME_OVER: 2
 });
 
-var tiles;
+var myTiles;
 var currentScore = 0;
 var currentGameState = GAME_STATES.CAN_MOVE;
-var NoAvailableSpaceException = "Brak miejsca na mapie!";
-
-var modal = document.getElementById('gameOverModal');
+var gameOverModal = document.getElementById('gameOverModal');
+var noAvailableSpaceException = "No available space for new tile!";
 
 initialize();
 
 function initialize() {
 
-    tiles = generateMap(5, 5);
+    myTiles = generateMap(4, 4);
 
     document.getElementById("RowsSettings").onchange = function (event) {
-        tiles.currentMapHeight = event.srcElement.value;
-        console.log("new Height: " + tiles.currentMapHeight);
+
+        myTiles.mapHeight = event.target.value;
+        document.getElementById("GameTableContainer").focus();
         restartGame();
     };
 
     document.getElementById("ColumnsSettings").onchange = function (event) {
-        tiles.currentMapWidth = event.srcElement.value;
-        console.log("new Width: " + tiles.currentMapWidth);
+        myTiles.mapWidth = event.target.value;
+        document.getElementById("GameTableContainer").focus();
         restartGame();
     };
-
     document.getElementById("saveScoreButton").onclick = closeModalAndSaveData;
+    document.getElementById("saveScoreForm").onsubmit = closeModalAndSaveData;
 
     bindArrows();
-
-    renderTopScores(getMapTypeKey(tiles));
-    document.getElementById("saveScoreForm").onsubmit = closeModalAndSaveData;
+    renderTopScores(getMapTypeKey(myTiles));
 }
 
 function restartGame() {
     currentScore = 0;
-    tiles = generateMap(tiles.currentMapHeight, tiles.currentMapWidth);
+    myTiles = generateMap(myTiles.mapHeight, myTiles.mapWidth);
     document.getElementById("GameTable").focus();
-    renderTopScores(getMapTypeKey(tiles));
+    renderCurrentScore();
+    renderTopScores(getMapTypeKey(myTiles));
 }
 
 function bindArrows() {
@@ -80,42 +75,56 @@ function Tile(value) {
     this.value = value;
 }
 
-function ColumnOrRow(length) {
-    this.values = new Array(length);
-}
-
 function TilesArray(height, width) {
-    this.columns = [];
-    this.rows = [];
-    this.makeColumnsAndRows = function () {
-        for (var i = 0; i < width; i++) {
-            this.columns[i] = new ColumnOrRow(height);
-        }
-        for (var j = 0; j < height; j++) {
-            this.rows[j] = new ColumnOrRow(width);
-        }
-    };
+
+    this.tilesArray = [];
+
+    this.mapHeight = height;
+    this.mapWidth = width;
 
     this.init = function () {
-        this.columns = [];
-        this.rows = [];
-        this.makeColumnsAndRows();
-        for (var rowIndex = 0; rowIndex < height; rowIndex++) {
-            for (var columnIndex = 0; columnIndex < width; columnIndex++) {
-                var tile = new Tile("");
-                this.columns[columnIndex].values[rowIndex] = tile;
-                this.rows[rowIndex].values[columnIndex] = tile;
+        for (var rowIndex = 0; rowIndex < this.mapHeight; rowIndex++) {
+            this.tilesArray[rowIndex] = [];
+            for (var columnIndex = 0; columnIndex < this.mapWidth; columnIndex++) {
+                this.tilesArray[rowIndex].push(new Tile(""));
             }
         }
     };
-    this.currentMapHeight = height;
-    this.currentMapWidth = width;
+
+    this.getRow = function (rowIndex) {
+        return this.tilesArray[rowIndex];
+    };
+
+    this.getColumn = function (columnIndex) {
+        var column = [];
+
+        for (var i = 0; i < this.mapHeight; i++) {
+            column.push(this.tilesArray[i][columnIndex]);
+        }
+
+        return column;
+    };
+
+    this.setRow = function (rowIndex, newRow) {
+        this.tilesArray[rowIndex] = newRow;
+    };
+
+    this.setColumn = function (columnIndex, newColumn) {
+
+        for (var i = 0; i < this.mapHeight; i++) {
+            this.tilesArray[i][columnIndex] = newColumn[i];
+        }
+    };
+
+    this.getElement = function (rowIndex, columnIndex) {
+        return this.tilesArray[rowIndex][columnIndex];
+    };
 }
 
 function generateHtmlTable(height, width) {
     var table = document.getElementById("GameTable");
-
     table.innerHTML = "";
+
     for (var i = 0; i < height; i++) {
         var row = document.createElement("tr");
         table.appendChild(row);
@@ -128,79 +137,88 @@ function generateHtmlTable(height, width) {
 function generateMap(newHeight, newWidth) {
     generateHtmlTable(newHeight, newWidth);
 
-    tiles = new TilesArray(newHeight, newWidth);
-    tiles.init();
+    myTiles = new TilesArray(newHeight, newWidth);
+    myTiles.init();
 
-    generateTiles(tiles.columns, 3);
-    renderMap(tiles.rows);
+    addNewRandomTile(myTiles, 3);
+    renderMap(myTiles);
 
     currentGameState = GAME_STATES.CAN_MOVE;
-    return tiles;
+
+    return myTiles;
 }
 
-function generateTiles(columns, tilesToGenerateCount) {
-    var availablePositions = getAvailablePositions(columns);
-    if (availablePositions === -1) {
-        throw NoAvailableSpaceException;
+function addNewRandomTile(tiles, tilesToGenerateCount) {
+    var availablePositions = getAvailablePositions(tiles);
+
+    if (availablePositions.length === 0) {
+        throw noAvailableSpaceException;
     }
 
     for (var i = 0; i < tilesToGenerateCount; i++) {
-        var tilePositions = getRandomObjectFromArray(availablePositions);
-        var rowIndex = tilePositions.rowIndex;
-        var columnIndex = tilePositions.columnIndex;
-        columns[columnIndex].values[rowIndex].value = (Math.floor((Math.random() * 2))) ? 2 : 2; // Losuje 2 albo 4
+        var randomTile = getRandomObjectFromArray(availablePositions);
+
+        // Add's new tile to the map
+        // 2 to 4 : 80 % to 20%
+        tiles.tilesArray[randomTile.rowIndex][randomTile.columnIndex].value = (Math.random() > 0.2) ? 2 : 4;
     }
 }
 
-function getAvailablePositions(columns) {
+function getAvailablePositions(tiles) {
     var availablePositions = [];
-    for (var i = 0; i < columns.length; i++) {
 
-        var currentColumn = columns[i];
-        for (var j = 0; j < currentColumn.values.length; j++) {
+    for (var i = 0; i < tiles.mapHeight; i++) {
 
-            if (currentColumn.values[j].value === "") {
-                availablePositions.push({rowIndex: j, columnIndex: i});
+        var currentRow = tiles.tilesArray[i];
+
+        for (var j = 0; j < tiles.mapWidth; j++) {
+            if (currentRow[j].value === "") {
+                availablePositions.push({rowIndex: i, columnIndex: j});
             }
         }
     }
-    return availablePositions.length ? availablePositions : -1;
+
+    return availablePositions;
 }
 
 function getRandomObjectFromArray(inputArray) {
-    var minIndex = 0;
     var maxIndex = inputArray.length;
-    return inputArray[Math.floor(Math.random() * maxIndex) + minIndex];
+
+    return inputArray[Math.floor(Math.random() * maxIndex)];
 }
 
 
 //VIEW
-function renderMap(rows) {
-    var tableCells = document.getElementById("GameTable").getElementsByTagName("td");
+function renderMap(tiles) {
+    var documentCells = document.getElementById("GameTable").getElementsByTagName("td");
 
-    for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-        var currentRow = rows[rowIndex];
+    for (var rowIndex = 0; rowIndex < tiles.mapHeight; rowIndex++) {
 
-        for (var columnIndex = 0; columnIndex < currentRow.values.length; columnIndex++) {
-            var tileValue = currentRow.values[columnIndex].value;
-            var cell = tableCells[rowIndex * rows[0].values.length + columnIndex];
-            cell.innerText = (tileValue);
-            cell.classList = [];
-            cell.classList.add('tile' + tileValue);
+        var currentRow = tiles.tilesArray[rowIndex];
+
+        for (var columnIndex = 0; columnIndex < tiles.mapWidth; columnIndex++) {
+
+            var tileValue = currentRow[columnIndex].value;
+            var documentCell = documentCells[rowIndex * tiles.mapWidth + columnIndex];
+
+            documentCell.innerText = (tileValue);
+            documentCell.classList = [];
+            documentCell.classList.add('tile' + tileValue);
         }
     }
+}
+
+function renderCurrentScore() {
     var currentScoreElements = document.getElementsByClassName("currentScore");
+
     for (var i = 0; i < currentScoreElements.length; i++) {
         currentScoreElements[i].innerText = currentScore;
     }
-
 }
 
 function displayGameOverModal(modal) {
     modal.style.display = "block";
-
     document.getElementById("nicknameInput").focus();
-
     unbindArrows();
 }
 
@@ -208,10 +226,14 @@ function closeModalAndSaveData(e) {
     e.preventDefault(); // Prevent refresh page.
 
     var nickName = document.getElementById("nicknameInput").value;
-    var scoreTypeKey = getMapTypeKey(tiles);
+    if (nickName === "") {
+        return;
+    }
+    var scoreTypeKey = getMapTypeKey(myTiles);
+
     saveScore(currentScore, nickName, scoreTypeKey);
     renderTopScores(scoreTypeKey);
-    modal.style.display = "none";
+    gameOverModal.style.display = "none";
     bindArrows();
     restartGame();
 
@@ -219,20 +241,25 @@ function closeModalAndSaveData(e) {
 }
 
 function getMapTypeKey(tiles) {
-    return tiles.currentMapWidth + "x" + tiles.currentMapHeight;
+    return tiles.mapWidth + "x" + tiles.mapHeight;
 }
 
 function renderTopScores(mapTypeKey) {
     var sortedInputArray = localStorage.getObj(mapTypeKey);
+    var noScoreDiv = document.getElementById("no-scores");
     document.getElementById("ScoreTypeHeader").innerText = mapTypeKey;
 
+    noScoreDiv.style.display = "none";
     if (typeof sortedInputArray !== "undefined") {
         var topScoresDiv = document.getElementById("TopScoresContainer");
+
         topScoresDiv.innerHTML = "";
 
         if (sortedInputArray === null) {
+            noScoreDiv.style.display = "block";
             return;
         }
+
 
         for (var i = 0; i < 10; i++) {
             var scoreRow = document.createElement("div");
@@ -262,6 +289,8 @@ function renderTopScores(mapTypeKey) {
             scoreRow.appendChild(scoreCell);
             topScoresDiv.appendChild(scoreRow);
         }
+    } else {
+        noScoreDiv.style.display = "block";
     }
 }
 
@@ -306,7 +335,7 @@ function sortTop10Scores(input) {
 //Logic
 function moveAndGenerate(event) {
 
-    event.preventDefault(); // prevent the default action (scroll / move caret)
+    event.preventDefault();
 
     var directionFunction;
     var direction = event.which;
@@ -325,20 +354,22 @@ function moveAndGenerate(event) {
             directionFunction = moveDown;
             break;
         default:
-            return; // exit this handler for other keys
+            return;
     }
 
-    currentGameState = canMove(direction, tiles);
+    currentGameState = canMove(direction, myTiles);
 
     switch (currentGameState) {
         case GAME_STATES.CAN_MOVE:
-            directionFunction(tiles);
+            directionFunction(myTiles);
             try {
-                generateTiles(tiles.columns, 1);
+                addNewRandomTile(myTiles, 1);
             }
             catch (exception) {
+                console.error(exception);
             }
-            renderMap(tiles.rows);
+            renderMap(myTiles);
+            renderCurrentScore();
             break;
 
         case GAME_STATES.MOVE_OTHER_DIRECTION:
@@ -346,45 +377,43 @@ function moveAndGenerate(event) {
             break;
 
         case GAME_STATES.GAME_OVER:
-            displayGameOverModal(modal);
+            displayGameOverModal(gameOverModal);
     }
 }
 
-function canMove(direction, tilesArray) {
+function canMove(direction, tiles) {
     var stateLeft;
     var stateRight;
     var stateUp;
     var stateDown;
 
-
-    for (var rowIndex = 0; rowIndex < tilesArray.currentMapHeight; rowIndex++) {
+    for (var rowIndex = 0; rowIndex < tiles.mapHeight; rowIndex++) {
         if (stateRight) {
             break;
         }
-        stateRight = canRowMove(true, tilesArray.rows[rowIndex].values);
+        stateRight = canRowMove(true, tiles.getRow(rowIndex));
     }
 
-    for (var rowIndex1 = 0; rowIndex1 < tilesArray.currentMapHeight; rowIndex1++) {
+    for (var rowIndex1 = 0; rowIndex1 < tiles.mapHeight; rowIndex1++) {
         if (stateLeft) {
             break;
         }
-        stateLeft = canRowMove(false, tilesArray.rows[rowIndex1].values);
+        stateLeft = canRowMove(false, tiles.getRow(rowIndex1));
     }
 
-    for (var columnIndex = 0; columnIndex < tilesArray.currentMapWidth; columnIndex++) {
+    for (var columnIndex = 0; columnIndex < tiles.mapWidth; columnIndex++) {
         if (stateUp) {
             break;
         }
-        stateUp = canRowMove(false, tilesArray.columns[columnIndex].values);
+        stateUp = canRowMove(false, tiles.getColumn(columnIndex));
     }
 
-    for (var columnIndex1 = 0; columnIndex1 < tilesArray.currentMapWidth; columnIndex1++) {
+    for (var columnIndex1 = 0; columnIndex1 < tiles.mapWidth; columnIndex1++) {
         if (stateDown) {
             break;
         }
-        stateDown = canRowMove(true, tilesArray.columns[columnIndex1].values);
+        stateDown = canRowMove(true, tiles.getColumn(columnIndex1));
     }
-
 
     if (stateLeft === false && stateRight === false && stateDown === false && stateUp === false) {
         return GAME_STATES.GAME_OVER;
@@ -403,10 +432,8 @@ function canMove(direction, tilesArray) {
         return GAME_STATES.CAN_MOVE;
     }
 
-
     return GAME_STATES.MOVE_OTHER_DIRECTION;
 }
-
 
 function canRowMove(horizontally, row) {
 
@@ -475,43 +502,42 @@ function canRowMove(horizontally, row) {
     return false;
 }
 
-function moveUp(input) {
-    var columns = input.columns;
-    for (var columnIndex = 0; columnIndex < columns.length; columnIndex++) {
-        columns[columnIndex] = doSingleMove(columns[columnIndex]);
+function moveUp(tiles) {
+    for (var columnIndex = 0; columnIndex < tiles.mapWidth; columnIndex++) {
+        tiles.setColumn(columnIndex, doSingleMove(tiles.getColumn(columnIndex)));
     }
 }
 
-function moveDown(input) {
-    var columns = input.columns;
-    for (var columnIndex = 0; columnIndex < columns.length; columnIndex++) {
-        columns[columnIndex] = doSingleMoveReverse(columns[columnIndex]);
+function moveDown(tiles) {
+    for (var columnIndex = 0; columnIndex < tiles.mapWidth; columnIndex++) {
+        tiles.setColumn(columnIndex, doSingleMoveReverse(tiles.getColumn(columnIndex)));
     }
 }
 
-function moveLeft(input) {
-    var rows = input.rows;
-    for (var indexRow = 0; indexRow < rows.length; indexRow++) {
-        rows[indexRow] = doSingleMove(rows[indexRow]);
+function moveLeft(tiles) {
+    for (var rowIndex = 0; rowIndex < tiles.mapHeight; rowIndex++) {
+        tiles.setRow(rowIndex, doSingleMove(tiles.getRow(rowIndex)));
     }
 }
 
-function moveRight(input) {
-    var rows = input.rows;
-    for (var indexRow = 0; indexRow < rows.length; indexRow++) {
-        rows[indexRow] = doSingleMoveReverse(rows[indexRow]);
+function moveRight(tiles) {
+    for (var rowIndex = 0; rowIndex < tiles.mapHeight; rowIndex++) {
+        tiles.setRow(rowIndex, doSingleMoveReverse(tiles.getRow(rowIndex)));
     }
 }
 
-function doSingleMove(inputColumn) {
-    var n = inputColumn.values.length;
+function doSingleMove(input) {
+    var elementCount = input.length;
     var sortedLastIndex = 0;
+
     do {
         var indexRow;
-        for (indexRow = sortedLastIndex; indexRow < inputColumn.values.length - 1; indexRow++) {
-            var currentElement = inputColumn.values[indexRow];
-            var nextElement = inputColumn.values[indexRow + 1];
-            inputColumn.changed = true;
+        for (indexRow = sortedLastIndex; indexRow < input.length - 1; indexRow++) {
+
+            var currentElement = input[indexRow];
+            var nextElement = input[indexRow + 1];
+            input.changed = true;
+
             if (currentElement.value === "") {
                 currentElement.value = nextElement.value;
                 nextElement.value = "";
@@ -524,22 +550,24 @@ function doSingleMove(inputColumn) {
 
                 currentScore += currentElement.value;
             } else {
-                inputColumn.changed = false;
+                input.changed = false;
             }
         }
-        n--;
-    } while (n > 1);
-    return inputColumn;
+        elementCount--;
+    } while (elementCount > 1);
+
+    return input;
 }
 
-function doSingleMoveReverse(inputColumn) {
-    var n = inputColumn.values.length;
+function doSingleMoveReverse(input) {
+    var n = input.length;
     var sortedLastIndex = n - 1;
+
     do {
         var indexRow;
         for (indexRow = sortedLastIndex; indexRow > 0; indexRow--) {
-            var currentElement = inputColumn.values[indexRow];
-            var prevElement = inputColumn.values[indexRow - 1];
+            var currentElement = input[indexRow];
+            var prevElement = input[indexRow - 1];
 
             if (currentElement.value === "") {
                 currentElement.value = prevElement.value;
@@ -551,10 +579,11 @@ function doSingleMoveReverse(inputColumn) {
                 prevElement.value = "";
                 currentScore += currentElement.value;
             } else {
-                inputColumn.changed = false;
+                input.changed = false;
             }
         }
         n--;
     } while (n > 1);
-    return inputColumn;
+
+    return input;
 }
