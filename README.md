@@ -1,4 +1,4 @@
-# 2048 Game in JS
+# 2048 Game in JavaScript
 
 ----------------------------------------------------------
 
@@ -9,8 +9,8 @@ Features:
  * Changeable number of rows and columns
 
 
-#Try it:
-##[d4rn0k.github.io/2048JS](https://d4rn0k.github.io/2048JS)
+# Try it:
+## [d4rn0k.github.io/2048JS](https://d4rn0k.github.io/2048JS)
 
 Screenshot:
 
