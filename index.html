@@ -2,20 +2,18 @@
 <html>
 <head lang="en">
     <meta charset="UTF-8">
-    <title>2048 Game</title>
+    <title>2048, Game!</title>
     <link rel="stylesheet" href="style.css">
+    <script src="app.js"></script>
 </head>
-
-<title>2048, Game!</title>
-
 <body>
 
-<div id="MainContainer">
-    <div id="ScoreDiv">
-        Score: <b class="currentScore">0</b>
+<div id="main-container">
+    <div id="score-div">
+        Score: <b class="current-score">0</b>
     </div>
 
-    <div id="LeftColumn">
+    <div id="left-column">
 
         <div class="box-with-shadow">
 
@@ -37,11 +35,11 @@
 
         </div>
 
-        <div id="Settings" class="box-with-shadow">
+        <div id="settings" class="box-with-shadow">
             <div class="settings-option">
                 Rows:
             </div>
-            <label id="RowsSettings" class="settings-value" title="rows">
+            <label id="rows-settings" class="settings-value" title="rows">
                 <select>
                     <option value="1">1</option>
                     <option value="2">2</option>
@@ -56,7 +54,7 @@
             <div class="settings-option">
                 Columns:
             </div>
-            <label id="ColumnsSettings" title="columns">
+            <label id="columns-settings" class="settings-value" title="columns">
                 <select>
                     <option value="1">1</option>
                     <option value="2">2</option>
@@ -68,44 +66,44 @@
                 </select>
             </label>
             <div class="settings-button">
-                <button class="button" onclick="restartGame()">Restart</button>
+                <button id="restart-button" class="button">Restart</button>
             </div>
         </div>
     </div>
 
-    <div id="GameTableContainer">
-        <table id="GameTable"></table>
+    <div id="game-table-container">
+        <table id="game-table"></table>
     </div>
 
-    <div id="TopScores" class="box-with-shadow">
+    <div id="top-scores" class="box-with-shadow">
         <div class="heading">
-            Top scores <span id="ScoreTypeHeader"></span>
+            Top scores <span id="score-type-header"></span>
         </div>
         <div id="no-scores">No scores!</div>
-        <div id="TopScoresContainer">
+        <div id="top-scores-container">
 
         </div>
     </div>
 
-    <div id="gameOverModal" class="modal">
+    <div id="game-over-modal" class="modal">
         <div class="modal-content">
 
             <div class="modal-header">
                 <h1>Game Over! </h1>
-                <h1>Final score: <span class="currentScore"></span>!</h1>
+                <h1>Final score: <span class="current-score"></span>!</h1>
             </div>
 
             <div class="modal-body">
-                <form id="saveScoreForm">
-                    <label for="nicknameInput">Nick: </label>
-                    <input id="nicknameInput"
-                           name="nicknameInput"
+                <form id="save-score-form">
+                    <label for="nickname-input">Nick: </label>
+                    <input id="nickname-input"
+                           name="nickname-input"
                            type="text"
                            placeholder="Anonymous"
                            maxlength="15"
                            required
                            autocomplete="off">
-                    <button id="saveScoreButton" type="button" class="button border-box">Zapisz</button>
+                    <button id="save-score-button" type="button" class="button border-box">Zapisz</button>
                 </form>
             </div>
         </div>
@@ -114,5 +112,4 @@
 </div>
 
 </body>
-<script src="app.js"></script>
 </html>
