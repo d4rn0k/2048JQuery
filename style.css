@@ -183,6 +183,7 @@ body {
 
     grid-column: 3;
     -ms-grid-column: 3;
+    font-family: "monospace";
 }
 
 .current-score {
