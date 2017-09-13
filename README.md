@@ -14,4 +14,7 @@
 
 #### Screenshot (Google Chrome):
 
-![Screenshot Google Chrome](screenshot.png?raw=true "2048JS in Google Chrome")
+<p align="center">
+  <img src="https://github.com/d4rn0k/2048JS/raw/master/screenshot.png?raw=true" 
+  alt="Screenshot Google Chrome"/>
+</p>
